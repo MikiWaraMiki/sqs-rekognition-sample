@@ -319,7 +319,7 @@
     "@aws-cdk/core" "1.101.0"
     constructs "^3.3.69"
 
-"@aws-cdk/aws-sqs@1.101.0":
+"@aws-cdk/aws-sqs@1.101.0", "@aws-cdk/aws-sqs@^1.101.0":
   version "1.101.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-sqs/-/aws-sqs-1.101.0.tgz#7b1335081b85a7d9b19e9bc4551edc0d28d99cd8"
   integrity sha512-jO1u1pqJEewauOzqraSgeaTc3MFcz+AdHds3eXKDDkulCyVcugjPx1uQ4Chb7rB602D+nw6SqMTPrWXC/9+M9A==

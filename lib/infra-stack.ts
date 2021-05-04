@@ -13,6 +13,7 @@ import {
 import { ENV_CONFIG } from '../.env/config'
 import { BlockPublicAccess, BucketEncryption } from '@aws-cdk/aws-s3'
 import { ManagedPolicy, Role, ServicePrincipal } from '@aws-cdk/aws-iam'
+import { Queue } from '@aws-cdk/aws-sqs'
 
 export class InfraStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -24,6 +25,11 @@ export class InfraStack extends cdk.Stack {
       encryption: BucketEncryption.S3_MANAGED,
       enforceSSL: true,
       blockPublicAccess: BlockPublicAccess.BLOCK_ACLS,
+    })
+
+    // SQS
+    const queue = new Queue(this, 'imageQueue', {
+      queueName: 'rekognitionSampleQueue',
     })
 
     // front lambda iam role
@@ -47,6 +53,7 @@ export class InfraStack extends cdk.Stack {
       role: frontLambdaIamRole,
       environment: {
         BUCKET_NAME: imageBucket.bucketName,
+        QUEUE_URL: queue.queueUrl,
       },
     })
 
