@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler } from 'aws-lambda'
-import { S3 } from 'aws-sdk'
+import { S3, SQS } from 'aws-sdk'
 import { ImageFile } from './domain/model/imageFile/ImageFile'
 import { ImageFileBody } from './domain/model/imageFile/ImageFileBody'
 import { ImageFileName } from './domain/model/imageFile/ImageFileName'
@@ -23,14 +23,31 @@ export const handler: APIGatewayProxyHandler = async (
     const file = new ImageFile(fileName, fileBody)
 
     const s3Client = new S3()
+    const sqsClient = new SQS()
+
+    const key = `uploads/${file.id}/${file.name()}`
     const params: S3.PutObjectRequest = {
       Body: file.body(),
       Bucket: process.env.BUCKET_NAME ?? '',
-      Key: `uploads/${file.id}/${file.name()}`,
+      Key: key,
       ContentType: file.contentType(),
     }
     await s3Client.putObject(params).promise()
     console.log('uploaded file')
+
+    // NOTE: SQSにメッセージング
+    const queueMessage = {
+      s3FilePath: key,
+    }
+    const sendMessage = await sqsClient
+      .sendMessage({
+        MessageBody: JSON.stringify(queueMessage),
+        QueueUrl: process.env.QUEUE_URL ?? '',
+      })
+      .promise()
+
+    console.log('success send message')
+    console.log(sendMessage)
 
     return {
       statusCode: 200,
