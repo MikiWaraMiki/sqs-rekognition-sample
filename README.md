@@ -14,11 +14,11 @@
 ## Prerequisites
 
 - aws-cdk
-  - > = 1.101.0
+  - `>=1.101.0`
 - node
-  - > = 12.16.0
+  - `>=12.16.0`
 - yarn
-  - > = 1.22.5
+  - `>=1.22.5`
 
 ## Getting Started
 
