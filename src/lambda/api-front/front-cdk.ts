@@ -1,5 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler } from 'aws-lambda'
 import { S3, SQS } from 'aws-sdk'
+import { createLambdaLogger } from '../shared/logger'
 import { ImageFile } from './domain/model/imageFile/ImageFile'
 import { ImageFileBody } from './domain/model/imageFile/ImageFileBody'
 import { ImageFileName } from './domain/model/imageFile/ImageFileName'
@@ -9,14 +10,24 @@ import { UserInvalidException } from './exception/UserInvalidException'
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,
 ) => {
+  const logger = createLambdaLogger()
   try {
-    console.log('event received')
-    console.log(event)
+    logger.log({
+      level: 'info',
+      message: 'request is received',
+      params: event,
+    })
+
     if (!event.body) {
+      logger.log({
+        level: 'warn',
+        message: 'request is not include body',
+      })
       throw UserInvalidException.badRequest('invalid parameters', [
         'リクエストが不正です',
       ])
     }
+
     const body = JSON.parse(event.body)
     const fileName = new ImageFileName(body.fileName)
     const fileBody = new ImageFileBody(body.imageBase64)
@@ -32,14 +43,28 @@ export const handler: APIGatewayProxyHandler = async (
       Key: key,
       ContentType: file.contentType(),
     }
+
+    logger.log({
+      level: 'info',
+      message: 'uploading file to s3',
+      params: params,
+    })
     await s3Client.putObject(params).promise()
-    console.log('uploaded file')
+    logger.log({
+      level: 'info',
+      message: 'uploaded file to s3',
+    })
 
     // NOTE: SQSにメッセージング
     const queueMessage = {
       s3FilePath: key,
       uuid: file.id,
     }
+    logger.log({
+      level: 'info',
+      message: 'sending message to sqs',
+      params: queueMessage,
+    })
     const sendMessage = await sqsClient
       .sendMessage({
         MessageBody: JSON.stringify(queueMessage),
@@ -47,8 +72,11 @@ export const handler: APIGatewayProxyHandler = async (
       })
       .promise()
 
-    console.log('success send message')
-    console.log(sendMessage)
+    logger.log({
+      level: 'info',
+      message: 'sended message to sqs',
+      response: sendMessage,
+    })
 
     return {
       statusCode: 200,
@@ -57,7 +85,12 @@ export const handler: APIGatewayProxyHandler = async (
       }),
     }
   } catch (e) {
-    console.error((e as Error).message)
+    const exception = (e as Error).message
+    logger.log({
+      level: 'error',
+      message: 'error is happened',
+      exception,
+    })
 
     if (e instanceof UserInvalidException) {
       return {
