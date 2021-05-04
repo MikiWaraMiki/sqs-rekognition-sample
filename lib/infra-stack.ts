@@ -14,6 +14,7 @@ import { ENV_CONFIG } from '../.env/config'
 import { BlockPublicAccess, BucketEncryption } from '@aws-cdk/aws-s3'
 import { ManagedPolicy, Role, ServicePrincipal } from '@aws-cdk/aws-iam'
 import { Queue } from '@aws-cdk/aws-sqs'
+import { SqsEventSource } from '@aws-cdk/aws-lambda-event-sources'
 
 export class InfraStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -56,6 +57,36 @@ export class InfraStack extends cdk.Stack {
         QUEUE_URL: queue.queueUrl,
       },
     })
+
+    // backend lambda role
+    const backendLambdaIamRole = new Role(this, 'backendLambdaRole', {
+      roleName: 'backendLambdaRole',
+      assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+      managedPolicies: [
+        ManagedPolicy.fromAwsManagedPolicyName('CloudWatchLogsFullAccess'),
+        ManagedPolicy.fromAwsManagedPolicyName('AmazonS3FullAccess'),
+        ManagedPolicy.fromAwsManagedPolicyName('AmazonSQSFullAccess'),
+        ManagedPolicy.fromAwsManagedPolicyName('AmazonRekognitionFullAccess'),
+      ],
+    })
+    // Create Backend Lambda
+    const backendLambda = new NodejsFunction(this, 'backend', {
+      functionName: 'backendRekognition',
+      description: 'ApiGateway and SQS and Rekognition Backend',
+      entry: 'src/lambda/rekognition-backend/backend.ts',
+      runtime: lambda.Runtime.NODEJS_12_X,
+      timeout: Duration.seconds(30),
+      tracing: lambda.Tracing.ACTIVE,
+      role: backendLambdaIamRole,
+      environment: {
+        BUCKET_NAME: imageBucket.bucketName,
+      },
+    })
+    backendLambda.addEventSource(
+      new SqsEventSource(queue, {
+        batchSize: 1,
+      }),
+    )
 
     // API Gateway
     const restApiLogGroup = new cloudwatchLog.LogGroup(

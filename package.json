@@ -39,6 +39,7 @@
     "@aws-cdk/aws-cloudwatch": "^1.101.0",
     "@aws-cdk/aws-iam": "^1.101.0",
     "@aws-cdk/aws-lambda": "^1.101.0",
+    "@aws-cdk/aws-lambda-event-sources": "^1.101.0",
     "@aws-cdk/aws-lambda-nodejs": "^1.101.0",
     "@aws-cdk/aws-logs": "^1.101.0",
     "@aws-cdk/aws-s3": "^1.101.0",
@@ -46,6 +47,7 @@
     "@aws-cdk/core": "^1.101.0",
     "aws-sdk": "^2.897.0",
     "source-map-support": "^0.5.16",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "winston": "^3.3.3"
   }
 }

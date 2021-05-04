@@ -38,6 +38,7 @@ export const handler: APIGatewayProxyHandler = async (
     // NOTE: SQSにメッセージング
     const queueMessage = {
       s3FilePath: key,
+      uuid: file.id,
     }
     const sendMessage = await sqsClient
       .sendMessage({
