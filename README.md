@@ -11,7 +11,7 @@
   - SQS
   - AWS Rekognition
 
-## Prerequisites
+## Requirements
 
 - aws-cdk
   - `>=1.101.0`
